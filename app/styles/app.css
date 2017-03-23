@@ -1,0 +1,119 @@
+.shell {
+    position: fixed;
+    right: 0;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: lightgrey;
+    margin: 0;
+}
+
+.search-list-view{
+    border: 1px grey solid;
+    background-color: white;
+    position: absolute;
+    top: 5%;
+    left: 15%;
+    right: 15%;
+    bottom: 5%;
+}
+
+.header-controls {
+    height: 100px;
+    border-bottom: 1px grey solid;
+}
+
+.search-control {
+    padding: 50px 0 0 30px;
+}
+
+.search-control input::-webkit-input-placeholder { 
+  font-style: italic;
+  color: grey;
+}
+
+
+.search-list {
+    font-family: sans-serif;
+    padding: 10px;
+    font-size: small;
+}
+
+.totalStreams {
+    float: left;
+}
+
+.paging-control {
+    float: right;
+    margin-right: 10px;
+}
+
+.stream-list{
+    clear: both
+}
+
+.streams {
+    list-style: none;
+    padding: 5px 10px;
+    overflow-y: scroll;
+    position: absolute;
+    bottom: 10px;
+    top: 120px;
+    left: 10px;
+    right: 10px;
+    height: inherit;
+}
+
+.streams li {
+    clear: both;
+    height: 155px;
+    padding: 10px 0;
+}
+
+.stream-preview {
+    float: left;
+    height: 150px;
+    width: 150px;
+    border: 1px grey solid;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.stream-preview img {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+}
+
+.stream-preview span {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.stream-details {
+    float: left;
+    margin-left: 20px;
+}
+
+.stream-name {
+    font-size: x-large;
+    font-weight: bold;
+}
+
+.prev-page, .next-page {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    background-size: 10px 10px;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.prev-page {
+    background-image: url(arrow-left.png);    
+}
+
+.next-page {
+    background-image: url(arrow-right.png);    
+}
