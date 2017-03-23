@@ -30,7 +30,13 @@ var SearchListController = (function (_super) {
     };
 
     SearchListController.prototype.setSearchString = function (ev) {
-        this.searchString = ev.target.value;
+        ev.preventDefault();
+        if (ev.keyCode == 13) {
+            this.refreshSearchList();
+        }
+        else {
+            this.searchString = ev.target.value;
+        }
     };
 
     SearchListController.prototype.renderTemplate = function(searchListViewHtml){
