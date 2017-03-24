@@ -1,4 +1,4 @@
-.shell {
+body {
     position: fixed;
     right: 0;
     left: 0;
@@ -6,6 +6,20 @@
     bottom: 0;
     background: lightgrey;
     margin: 0;
+    font-family: arial,sans-serif;
+    color: #222;
+}
+
+a:link {
+    color: #1a0dab;
+}
+
+a:visited {
+    color: #609;
+}
+
+.invisible {
+    visibility: hidden;
 }
 
 .search-list-view{
@@ -24,7 +38,7 @@
 }
 
 .search-control {
-    padding: 50px 0 0 30px;
+    padding: 50px 0 0 20px;
 }
 
 .search-control input::-webkit-input-placeholder { 
@@ -34,8 +48,7 @@
 
 
 .search-list {
-    font-family: sans-serif;
-    padding: 10px;
+    padding: 10px 20px;
     font-size: small;
 }
 
@@ -45,7 +58,6 @@
 
 .paging-control {
     float: right;
-    margin-right: 10px;
 }
 
 .stream-list{
@@ -66,14 +78,20 @@
 
 .streams li {
     clear: both;
-    height: 155px;
-    padding: 10px 0;
+    height: 180px;
+    margin: 10px 0;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.streams li:hover {
+    background-color: lightgrey;
 }
 
 .stream-preview {
     float: left;
-    height: 150px;
-    width: 150px;
+    height: 180px;
+    width: 320px;
     border: 1px grey solid;
     white-space: nowrap;
     text-align: center;
@@ -97,8 +115,22 @@
 }
 
 .stream-name {
-    font-size: x-large;
-    font-weight: bold;
+    font-size: 18px;
+    font-weight: normal;
+    text-decoration: none;
+}
+
+.stream-name:hover {
+    text-decoration: underline;
+}
+
+.stream-details h3 {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
 }
 
 .prev-page, .next-page {
@@ -108,6 +140,12 @@
     background-size: 10px 10px;
     margin: 0 5px;
     cursor: pointer;
+}
+
+.game-name {
+    color: #006621;
+    font-size: 14px;
+    line-height: 16px;
 }
 
 .prev-page {

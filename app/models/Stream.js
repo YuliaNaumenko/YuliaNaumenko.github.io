@@ -8,6 +8,7 @@ var Stream = (function () {
             this.GameName = data.game;
             this.Viewers = data.viewers;
             this.Description = data.channel.status;
+            this.StreamUrl = data.channel.url;
         }
         return Stream;
 }());

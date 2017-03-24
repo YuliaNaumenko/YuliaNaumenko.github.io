@@ -12,20 +12,20 @@ var StreamListItem = (function (_super) {
             _super.call(this);
             this.streamItem = streamItem;
             this.viewHolder = document.getElementsByClassName(viewHolderSelector)[0];
-        }
+    }
 
-        StreamListItem.prototype.activate = function() {
+    StreamListItem.prototype.activate = function() {
             this.fetchTemplate("app/templates/StreamListItem.html");
-        }
+    }
 
-        StreamListItem.prototype.renderTemplate = function(searchListItemHtml){
+    StreamListItem.prototype.renderTemplate = function(searchListItemHtml){
             var _this = this;
             for (var prop in _this.streamItem) {
                 searchListItemHtml = searchListItemHtml.replace("{{" + prop + "}}", _this.streamItem[prop])
             }
-            _this.viewHolder.innerHTML = _this.viewHolder.innerHTML + searchListItemHtml;
-        }
+            _this.viewHolder.insertAdjacentHTML("beforeend", searchListItemHtml);
+    }
 
-        return StreamListItem;
+    return StreamListItem;
 
 }(BaseViewComponent || {}));

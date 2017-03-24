@@ -1,10 +1,6 @@
-var CallbackRegistry = {};        
+var CallbackRegistry = {}; 
 
-var JSONPHandler = (function () {
-    function JSONPHandler() {
-    }
-
-    JSONPHandler.prototype.load = function(url, onSuccess, onError) {
+function JSONPHandler(url, onSuccess, onError) {
         var scriptOk = false;
         var callbackName = 'cb' + String(Math.random()).slice(-6);
         url += ~url.indexOf('?') ? '&' : '?';
@@ -36,8 +32,4 @@ var JSONPHandler = (function () {
         script.src = url;
 
         document.body.appendChild(script);
-    }
-
-    return JSONPHandler;
-
-}(JSONPHandler || {}));
+}

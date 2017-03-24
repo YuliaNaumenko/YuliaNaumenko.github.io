@@ -52,7 +52,7 @@ var StreamsList = (function (_super) {
                     nextPageButton.addEventListener("click", _this.executeSearch.bind(_this, 1));
                 }
                 else {
-                    nextPageButton.style.visibility = "hidden";
+                    nextPageButton.className += " invisible";
                 }
 
                 var prevPageButton = this.getElementByClassName("prev-page");
@@ -60,12 +60,12 @@ var StreamsList = (function (_super) {
                     prevPageButton.addEventListener("click", _this.executeSearch.bind(_this, -1));
                 }
                 else {
-                    prevPageButton.style.visibility = "hidden";
+                    prevPageButton.className += " invisible";
                 }
             }
             else {
                 var pagingControl =  this.getElementByClassName("paging-control");  
-                pagingControl.style.visibility = "hidden";
+                pagingControl.className += " invisible";
             }
 
             for (i = 0; i < _this.streamItems.length; i++) { 

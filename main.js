@@ -8,6 +8,7 @@ var Stream = (function () {
             this.GameName = data.game;
             this.Viewers = data.viewers;
             this.Description = data.channel.status;
+            this.StreamUrl = data.channel.url;
         }
         return Stream;
 }());;var QueryInfo = (function () {
@@ -29,13 +30,9 @@ var Stream = (function () {
             configurable: true
         });
         return QueryInfo;
-}());;var CallbackRegistry = {};        
+}());;var CallbackRegistry = {}; 
 
-var JSONPHandler = (function () {
-    function JSONPHandler() {
-    }
-
-    JSONPHandler.prototype.load = function(url, onSuccess, onError) {
+function JSONPHandler(url, onSuccess, onError) {
         var scriptOk = false;
         var callbackName = 'cb' + String(Math.random()).slice(-6);
         url += ~url.indexOf('?') ? '&' : '?';
@@ -67,11 +64,7 @@ var JSONPHandler = (function () {
         script.src = url;
 
         document.body.appendChild(script);
-    }
-
-    return JSONPHandler;
-
-}(JSONPHandler || {}));;//= require app/helpers/JSONPHandler.js
+};//= require app/helpers/JSONPHandler.js
 //= require app/models/Stream.js
 
 var SearchStreamService = (function () {
@@ -88,7 +81,6 @@ var SearchStreamService = (function () {
             _this.fnCallback(parsedStreams, totalCount);
         };
 
-        _this.jsonpHandler = new JSONPHandler();
         return _this;
     }
 
@@ -104,7 +96,7 @@ var SearchStreamService = (function () {
         }
         url += '&limit=' + limit;
         this.fnCallback = fnCallback;
-        this.jsonpHandler.load(url, this.parseResult, this.errorHandler);
+        JSONPHandler(url, this.parseResult, this.errorHandler);
     }
 
     SearchStreamService.prototype.errorHandler = function(result) {
@@ -191,21 +183,21 @@ var StreamListItem = (function (_super) {
             _super.call(this);
             this.streamItem = streamItem;
             this.viewHolder = document.getElementsByClassName(viewHolderSelector)[0];
-        }
+    }
 
-        StreamListItem.prototype.activate = function() {
+    StreamListItem.prototype.activate = function() {
             this.fetchTemplate("app/templates/StreamListItem.html");
-        }
+    }
 
-        StreamListItem.prototype.renderTemplate = function(searchListItemHtml){
+    StreamListItem.prototype.renderTemplate = function(searchListItemHtml){
             var _this = this;
             for (var prop in _this.streamItem) {
                 searchListItemHtml = searchListItemHtml.replace("{{" + prop + "}}", _this.streamItem[prop])
             }
-            _this.viewHolder.innerHTML = _this.viewHolder.innerHTML + searchListItemHtml;
-        }
+            _this.viewHolder.insertAdjacentHTML("beforeend", searchListItemHtml);
+    }
 
-        return StreamListItem;
+    return StreamListItem;
 
 }(BaseViewComponent || {}));;//= require app/components/BaseViewComponent.js
 //= require app/components/StreamListItem.js
@@ -261,7 +253,7 @@ var StreamsList = (function (_super) {
                     nextPageButton.addEventListener("click", _this.executeSearch.bind(_this, 1));
                 }
                 else {
-                    nextPageButton.style.visibility = "hidden";
+                    nextPageButton.className += " invisible";
                 }
 
                 var prevPageButton = this.getElementByClassName("prev-page");
@@ -269,12 +261,12 @@ var StreamsList = (function (_super) {
                     prevPageButton.addEventListener("click", _this.executeSearch.bind(_this, -1));
                 }
                 else {
-                    prevPageButton.style.visibility = "hidden";
+                    prevPageButton.className += " invisible";
                 }
             }
             else {
                 var pagingControl =  this.getElementByClassName("paging-control");  
-                pagingControl.style.visibility = "hidden";
+                pagingControl.className += " invisible";
             }
 
             for (i = 0; i < _this.streamItems.length; i++) { 

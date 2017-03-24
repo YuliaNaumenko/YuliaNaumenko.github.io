@@ -15,7 +15,6 @@ var SearchStreamService = (function () {
             _this.fnCallback(parsedStreams, totalCount);
         };
 
-        _this.jsonpHandler = new JSONPHandler();
         return _this;
     }
 
@@ -31,7 +30,7 @@ var SearchStreamService = (function () {
         }
         url += '&limit=' + limit;
         this.fnCallback = fnCallback;
-        this.jsonpHandler.load(url, this.parseResult, this.errorHandler);
+        JSONPHandler(url, this.parseResult, this.errorHandler);
     }
 
     SearchStreamService.prototype.errorHandler = function(result) {
