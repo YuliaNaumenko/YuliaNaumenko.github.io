@@ -1,3 +1,5 @@
+//= require app/helpers/templateFetcher.js
+
 var BaseViewComponent = (function () {
     function BaseViewComponent() {
     }

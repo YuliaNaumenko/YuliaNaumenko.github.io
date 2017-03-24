@@ -1,3 +1,6 @@
+//= require app/helpers/JSONPHandler.js
+//= require app/models/Stream.js
+
 var SearchStreamService = (function () {
 
     function SearchStreamService() {
