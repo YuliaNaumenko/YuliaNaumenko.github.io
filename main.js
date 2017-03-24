@@ -1,1 +1,356 @@
-var Stream=function(){function a(a){void 0===a&&(a={}),this.Id=a._id,this.PreviewImageUrl=a.preview.medium,this.DisplayName=a.channel.display_name,this.GameName=a.game,this.Viewers=a.viewers,this.Description=a.channel.status}return a}(),QueryInfo=function(){function a(a,b,c){this.SearchString=a||"",this.TotalCount=b||0,this.CurrentPage=c||1}return Object.defineProperty(a.prototype,"TotalPages",{get:function(){return this.TotalCount>0?Math.ceil(this.TotalCount/5):0},enumerable:!0,configurable:!0}),a}(),CallbackRegistry={},JSONPHandler=function(){function a(){}return a.prototype.load=function(a,b,c){function d(){e||(delete CallbackRegistry[f],c(a))}var e=!1,f="cb"+String(Math.random()).slice(-6);a+=~a.indexOf("?")?"&":"?",a+="client_id=luqvyoa6utwz5evwsxo0tkjd3bdjk3&callback=CallbackRegistry."+f,CallbackRegistry[f]=function(a){e=!0,delete CallbackRegistry[f],b(a)};var g=document.createElement("script");g.onreadystatechange=function(){"complete"!=this.readyState&&"loaded"!=this.readyState||(this.onreadystatechange=null,setTimeout(d,0))},g.onload=g.onerror=d,g.src=a,document.body.appendChild(g)},a}(),SearchStreamService=function(){function a(){var a=this;return a.parseResult=function(b){var c=b._total,d=b.streams||[],e=[];for(i=0;i<d.length;i++)e.push(new Stream(d[i]));a.fnCallback(e,c)},a.jsonpHandler=new JSONPHandler,a}return a.prototype.getStreamCollection=function(a,b,c,d){var e="https://api.twitch.tv/kraken/search/streams?query=";e+=encodeURIComponent(a),"number"==typeof c&&(e+="&offset="+c),e+="number"==typeof d&&d>0?"&limit="+d:"&limit=5",this.fnCallback=b,this.jsonpHandler.load(e,this.parseResult,this.errorHandler)},a.prototype.errorHandler=function(a){console.error(a)},a}(),TemplateFetcher=function(){function a(){}return a.prototype.fetchTemplateByPath=function(a,b){var c=new XMLHttpRequest;c.callback=b,c.onload=function(a){200===this.status&&this.callback.apply(this)},c.onerror=function(a){console.error(this.statusText)},c.open("GET",a,!0),c.send()},a.init=function(){var b=new this;return a.current=b},a}(),BaseViewComponent=function(){function a(){}return a.prototype.renderTemplate=function(a){throw"Method renderTemplate should be overridden by the child class"},a.prototype.fetchTemplate=function(a){var b=this;TemplateFetcher.current.fetchTemplateByPath(a,function(){b.renderTemplate.call(b,this.responseText)})},a.prototype.getElementByClassName=function(a){try{var b=document.getElementsByClassName(a);if(b.length>0)return b[0];throw"DOM element with class name '"+a+"' does not exist."}catch(a){console.error(a)}},a}(),__extends=this&&this.__extends||function(a,b){function c(){this.constructor=a}for(var d in b)b.hasOwnProperty(d)&&(a[d]=b[d]);a.prototype=null===b?Object.create(b):(c.prototype=b.prototype,new c)},StreamListItem=function(a){function b(b,c){a.call(this),this.streamItem=b,this.viewHolder=document.getElementsByClassName(c)[0]}return __extends(b,a),b.prototype.activate=function(){this.fetchTemplate("app/templates/StreamListItem.html")},b.prototype.renderTemplate=function(a){var b=this;for(var c in b.streamItem)a=a.replace("{{"+c+"}}",b.streamItem[c]);b.viewHolder.innerHTML=b.viewHolder.innerHTML+a},b}(BaseViewComponent||{}),__extends=this&&this.__extends||function(a,b){function c(){this.constructor=a}for(var d in b)b.hasOwnProperty(d)&&(a[d]=b[d]);a.prototype=null===b?Object.create(b):(c.prototype=b.prototype,new c)},StreamsList=function(a){function b(b){a.call(this);var c=this;return c.streamItems=[],c.queryInfo=new QueryInfo,c.streamService=new SearchStreamService,c.viewHolder=document.getElementsByClassName(b)[0],c.getStreamsList=function(a,b){c.streamItems=a,c.queryInfo.TotalCount=b,c.fetchTemplate("app/templates/StreamsList.html")},c}return __extends(b,a),b.prototype.executeSearch=function(a){this.queryInfo.CurrentPage+=a,this.streamService.getStreamCollection(this.queryInfo.SearchString,this.getStreamsList,this.queryInfo.CurrentPage)},b.prototype.activate=function(a){this.queryInfo.SearchString=a,this.executeSearch(0)},b.prototype.renderTemplate=function(a){var b=this;for(var c in b.queryInfo)a=a.replace("{{"+c+"}}",b.queryInfo[c]);if(b.viewHolder.innerHTML=a,b.queryInfo.TotalCount>0){var d=this.getElementByClassName("next-page");b.queryInfo.TotalPages>b.queryInfo.CurrentPage?d.addEventListener("click",b.executeSearch.bind(b,1)):d.style.visibility="hidden";var e=this.getElementByClassName("prev-page");b.queryInfo.CurrentPage>1?e.addEventListener("click",b.executeSearch.bind(b,-1)):e.style.visibility="hidden"}else{this.getElementByClassName("paging-control").style.visibility="hidden"}for(i=0;i<b.streamItems.length;i++){new StreamListItem(b.streamItems[i],"streams").activate()}},b}(BaseViewComponent||{}),__extends=this&&this.__extends||function(a,b){function c(){this.constructor=a}for(var d in b)b.hasOwnProperty(d)&&(a[d]=b[d]);a.prototype=null===b?Object.create(b):(c.prototype=b.prototype,new c)},SearchListController=function(a){function b(){a.call(this),this.searchString=""}return __extends(b,a),b.prototype.init=function(){this.fetchTemplate("app/templates/SearchListView.html")},b.prototype.refreshSearchList=function(a){if(this.searchString&&""!==this.searchString){new StreamsList("search-list").activate(this.searchString)}else alert("Search query is required. Please enter the value.")},b.init=function(){return(new this).init()},b.prototype.setSearchString=function(a){a.preventDefault(),13==a.keyCode?this.refreshSearchList():this.searchString=a.target.value},b.prototype.renderTemplate=function(a){var b=this,c=document.getElementById("applicationHost");c.innerHTML=c.innerHTML+a,b.getElementByClassName("executeSearch").addEventListener("click",b.refreshSearchList.bind(b)),b.getElementByClassName("searchString").addEventListener("keyup",b.setSearchString.bind(b))},b}(BaseViewComponent||{}),App=function(a){return a.init=function(){TemplateFetcher.init(),SearchListController.init()},a}(App||{});App.init();
+var Stream = (function () {
+        function Stream(data) {
+            if (data === void 0) { data = {}; }
+
+            this.Id = data._id;
+            this.PreviewImageUrl = data.preview.medium;
+            this.DisplayName = data.channel.display_name;
+            this.GameName = data.game;
+            this.Viewers = data.viewers;
+            this.Description = data.channel.status;
+        }
+        return Stream;
+}());;var QueryInfo = (function () {
+        function QueryInfo(searchString, totalCount, currentPage) {
+
+            this.SearchString = searchString || "";
+            this.TotalCount = totalCount || 0;
+            this.CurrentPage = currentPage || 1;
+        }
+
+        Object.defineProperty(QueryInfo.prototype, "TotalPages", {
+            get: function () {
+                if (this.TotalCount > 0) {
+                    return Math.ceil(this.TotalCount / 5)
+                }
+                return 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return QueryInfo;
+}());;var CallbackRegistry = {};        
+
+var JSONPHandler = (function () {
+    function JSONPHandler() {
+    }
+
+    JSONPHandler.prototype.load = function(url, onSuccess, onError) {
+        var scriptOk = false;
+        var callbackName = 'cb' + String(Math.random()).slice(-6);
+        url += ~url.indexOf('?') ? '&' : '?';
+        // client id should be read from configuration
+        url += 'client_id=luqvyoa6utwz5evwsxo0tkjd3bdjk3&callback=CallbackRegistry.' + callbackName;
+
+        CallbackRegistry[callbackName] = function(data) {
+            scriptOk = true;
+            delete CallbackRegistry[callbackName];
+            onSuccess(data);
+        };
+
+        function checkCallback() {
+            if (scriptOk) return;
+            delete CallbackRegistry[callbackName];
+            onError(url);
+        }
+
+        var script = document.createElement('script');
+
+        script.onreadystatechange = function() {
+            if (this.readyState == 'complete' || this.readyState == 'loaded') {
+            this.onreadystatechange = null;
+                setTimeout(checkCallback, 0);
+            }
+        }
+
+        script.onload = script.onerror = checkCallback;
+        script.src = url;
+
+        document.body.appendChild(script);
+    }
+
+    return JSONPHandler;
+
+}(JSONPHandler || {}));;//= require app/helpers/JSONPHandler.js
+//= require app/models/Stream.js
+
+var SearchStreamService = (function () {
+
+    function SearchStreamService() {
+        var _this = this;
+        _this.parseResult = function(result) {
+            var totalCount = result._total;
+            var streams = result.streams || [];
+            var parsedStreams = [];
+            for (i = 0; i < streams.length; i++) { 
+                parsedStreams.push(new Stream(streams[i]));
+            }
+            _this.fnCallback(parsedStreams, totalCount);
+        };
+
+        _this.jsonpHandler = new JSONPHandler();
+        return _this;
+    }
+
+    SearchStreamService.prototype.getStreamCollection = function (searchString, fnCallback, pageNumber, limit) {
+        var url = "https://api.twitch.tv/kraken/search/streams?query=";
+        url += encodeURIComponent(searchString);
+        if (typeof (limit) !== "number" || limit <= 0) {
+            limit = 5;
+        }
+        if (typeof (pageNumber) === "number" && pageNumber > 1) {
+            var offset = (pageNumber - 1) * limit;
+            url += '&offset=' + offset;
+        }
+        url += '&limit=' + limit;
+        this.fnCallback = fnCallback;
+        this.jsonpHandler.load(url, this.parseResult, this.errorHandler);
+    }
+
+    SearchStreamService.prototype.errorHandler = function(result) {
+        console.error(result);
+    };
+
+	return SearchStreamService;
+}(SearchStreamService || {}));
+;var TemplateFetcher = (function () {
+
+    function TemplateFetcher() {
+    }
+
+    TemplateFetcher.prototype.fetchTemplateByPath = function (filePath, fnCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.callback = fnCallback;
+        xhr.onload = function (e) {
+            if (this.status === 200) {
+                this.callback.apply(this); 
+            }
+        };
+        
+        xhr.onerror = function (e) {
+            console.error(this.statusText);
+        };
+
+        xhr.open("GET", filePath, true);
+        xhr.send();
+    }
+
+    TemplateFetcher.init = function () {
+        var templateFetcher = new this();
+        return TemplateFetcher.current = templateFetcher;
+    };
+
+    return TemplateFetcher;
+}(TemplateFetcher || {}));
+
+
+
+;//= require app/helpers/templateFetcher.js
+
+var BaseViewComponent = (function () {
+    function BaseViewComponent() {
+    }
+
+    BaseViewComponent.prototype.renderTemplate = function(searchListViewHtml){
+        throw "Method renderTemplate should be overridden by the child class";
+    }
+
+    BaseViewComponent.prototype.fetchTemplate = function (templateName) { 
+        var _this = this;
+        TemplateFetcher.current.fetchTemplateByPath(templateName, function() { 
+            _this.renderTemplate.call(_this, this.responseText);
+        });
+    };
+
+    BaseViewComponent.prototype.getElementByClassName = function (name) {
+        try {
+            var elements = document.getElementsByClassName(name);
+            if (elements.length > 0) {
+                return elements[0];
+            } else {
+                throw "DOM element with class name '" + name + "' does not exist.";
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    return BaseViewComponent;
+
+})(BaseViewComponent || {});;//= require app/components/BaseViewComponent.js
+
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+
+var StreamListItem = (function (_super) {
+    __extends(StreamListItem, _super);
+    function StreamListItem(streamItem, viewHolderSelector) {
+            _super.call(this);
+            this.streamItem = streamItem;
+            this.viewHolder = document.getElementsByClassName(viewHolderSelector)[0];
+        }
+
+        StreamListItem.prototype.activate = function() {
+            this.fetchTemplate("app/templates/StreamListItem.html");
+        }
+
+        StreamListItem.prototype.renderTemplate = function(searchListItemHtml){
+            var _this = this;
+            for (var prop in _this.streamItem) {
+                searchListItemHtml = searchListItemHtml.replace("{{" + prop + "}}", _this.streamItem[prop])
+            }
+            _this.viewHolder.innerHTML = _this.viewHolder.innerHTML + searchListItemHtml;
+        }
+
+        return StreamListItem;
+
+}(BaseViewComponent || {}));;//= require app/components/BaseViewComponent.js
+//= require app/components/StreamListItem.js
+//= require app/services/SearchStreamService.js
+//= require app/models/QueryInfo.js
+
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+
+var StreamsList = (function (_super) {
+    __extends(StreamsList, _super);
+    function StreamsList(viewHolderSelector) {
+        _super.call(this);
+        var _this = this;
+        _this.streamItems = [];
+        _this.queryInfo = new QueryInfo();
+
+        _this.streamService = new SearchStreamService();
+        _this.viewHolder = document.getElementsByClassName(viewHolderSelector)[0];
+
+        _this.getStreamsList = function(streams, totalCount) {
+            _this.streamItems = streams;
+            _this.queryInfo.TotalCount = totalCount;
+            _this.fetchTemplate("app/templates/StreamsList.html");
+        }
+
+        return _this;
+    }
+
+    StreamsList.prototype.executeSearch = function(increasePage) {
+        this.queryInfo.CurrentPage += increasePage;
+        this.streamService.getStreamCollection(this.queryInfo.SearchString, this.getStreamsList, this.queryInfo.CurrentPage);
+    }
+
+    StreamsList.prototype.activate = function(searchString) {
+        this.queryInfo.SearchString = searchString;
+        this.executeSearch(0);
+    }
+
+     StreamsList.prototype.renderTemplate = function(streamsListHtml){
+            var _this = this;
+            for (var prop in _this.queryInfo) {
+                streamsListHtml = streamsListHtml.replace("{{" + prop + "}}", _this.queryInfo[prop])
+            }
+            _this.viewHolder.innerHTML = streamsListHtml;
+
+            if (_this.queryInfo.TotalCount > 0) {
+                var nextPageButton = this.getElementByClassName("next-page");
+                if(_this.queryInfo.TotalPages > _this.queryInfo.CurrentPage) {
+                    nextPageButton.addEventListener("click", _this.executeSearch.bind(_this, 1));
+                }
+                else {
+                    nextPageButton.style.visibility = "hidden";
+                }
+
+                var prevPageButton = this.getElementByClassName("prev-page");
+                if(_this.queryInfo.CurrentPage > 1) {
+                    prevPageButton.addEventListener("click", _this.executeSearch.bind(_this, -1));
+                }
+                else {
+                    prevPageButton.style.visibility = "hidden";
+                }
+            }
+            else {
+                var pagingControl =  this.getElementByClassName("paging-control");  
+                pagingControl.style.visibility = "hidden";
+            }
+
+            for (i = 0; i < _this.streamItems.length; i++) { 
+                var streamListItem = new StreamListItem(_this.streamItems[i], "streams");
+                streamListItem.activate();
+            }
+    }
+
+    return StreamsList;
+
+})(BaseViewComponent || {});;//= require app/components/BaseViewComponent.js
+//= require app/components/StreamsList.js
+
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+
+var SearchListController = (function (_super) {
+    __extends(SearchListController, _super);
+    function SearchListController() {
+        _super.call(this);
+        this.searchString = "";
+    }
+
+    SearchListController.prototype.init = function() {
+        this.fetchTemplate("app/templates/SearchListView.html");
+    }
+
+    SearchListController.prototype.refreshSearchList = function (ev) {
+        if (!this.searchString || this.searchString === "") {
+            alert("Search query is required. Please enter the value.");
+        }else {
+            var streamsList = new StreamsList("search-list");           
+            streamsList.activate(this.searchString);
+        }
+    };
+
+    SearchListController.init = function () {
+        var searchListController = new this();
+        return searchListController.init();
+    };
+
+    SearchListController.prototype.setSearchString = function (ev) {
+        ev.preventDefault();
+        if (ev.keyCode == 13) {
+            this.refreshSearchList();
+        }
+        else {
+            this.searchString = ev.target.value;
+        }
+    };
+
+    SearchListController.prototype.renderTemplate = function(searchListViewHtml){
+        var _this = this;
+        var output = document.getElementById("applicationHost");
+        output.innerHTML = output.innerHTML + searchListViewHtml;
+        _this.getElementByClassName("executeSearch").addEventListener("click", _this.refreshSearchList.bind(_this));
+        _this.getElementByClassName("searchString").addEventListener("keyup", _this.setSearchString.bind(_this));
+    }
+
+    return SearchListController;
+
+})(BaseViewComponent || {});;//= require app/controllers/SearchListController.js
+//= require app/helpers/templateFetcher.js
+
+var App = (function (app) {
+
+  app.init = function () {
+     TemplateFetcher.init();
+     SearchListController.init();
+  };
+  
+  return app;
+
+})(App || {});
+
+App.init();

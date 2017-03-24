@@ -19,18 +19,17 @@ var SearchStreamService = (function () {
         return _this;
     }
 
-    SearchStreamService.prototype.getStreamCollection = function (searchString, fnCallback, offset, limit) {
+    SearchStreamService.prototype.getStreamCollection = function (searchString, fnCallback, pageNumber, limit) {
         var url = "https://api.twitch.tv/kraken/search/streams?query=";
         url += encodeURIComponent(searchString);
-        if (typeof (offset) === "number") {
+        if (typeof (limit) !== "number" || limit <= 0) {
+            limit = 5;
+        }
+        if (typeof (pageNumber) === "number" && pageNumber > 1) {
+            var offset = (pageNumber - 1) * limit;
             url += '&offset=' + offset;
         }
-        if (typeof (limit) === "number" && limit > 0) {
-            url += '&limit=' + limit;
-        }
-        else {
-            url += '&limit=5';            
-        }
+        url += '&limit=' + limit;
         this.fnCallback = fnCallback;
         this.jsonpHandler.load(url, this.parseResult, this.errorHandler);
     }
