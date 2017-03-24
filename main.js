@@ -11,7 +11,9 @@ var Stream = (function () {
             this.StreamUrl = data.channel.url;
         }
         return Stream;
-}());;var QueryInfo = (function () {
+}());
+
+var QueryInfo = (function () {
         function QueryInfo(searchString, totalCount, currentPage) {
 
             this.SearchString = searchString || "";
@@ -30,7 +32,9 @@ var Stream = (function () {
             configurable: true
         });
         return QueryInfo;
-}());;var CallbackRegistry = {}; 
+}());
+
+var CallbackRegistry = {}; 
 
 function JSONPHandler(url, onSuccess, onError) {
         var scriptOk = false;
@@ -64,8 +68,7 @@ function JSONPHandler(url, onSuccess, onError) {
         script.src = url;
 
         document.body.appendChild(script);
-};//= require app/helpers/JSONPHandler.js
-//= require app/models/Stream.js
+};
 
 var SearchStreamService = (function () {
 
@@ -105,115 +108,38 @@ var SearchStreamService = (function () {
 
 	return SearchStreamService;
 }(SearchStreamService || {}));
-;var TemplateFetcher = (function () {
 
-    function TemplateFetcher() {
-    }
-
-    TemplateFetcher.prototype.fetchTemplateByPath = function (filePath, fnCallback) {
-        var xhr = new XMLHttpRequest();
-        xhr.callback = fnCallback;
-        xhr.onload = function (e) {
-            if (this.status === 200) {
-                this.callback.apply(this); 
-            }
-        };
-        
-        xhr.onerror = function (e) {
-            console.error(this.statusText);
-        };
-
-        xhr.open("GET", filePath, true);
-        xhr.send();
-    }
-
-    TemplateFetcher.init = function () {
-        var templateFetcher = new this();
-        return TemplateFetcher.current = templateFetcher;
-    };
-
-    return TemplateFetcher;
-}(TemplateFetcher || {}));
-
-
-
-;//= require app/helpers/templateFetcher.js
-
-var BaseViewComponent = (function () {
-    function BaseViewComponent() {
-    }
-
-    BaseViewComponent.prototype.renderTemplate = function(searchListViewHtml){
-        throw "Method renderTemplate should be overridden by the child class";
-    }
-
-    BaseViewComponent.prototype.fetchTemplate = function (templateName) { 
-        var _this = this;
-        TemplateFetcher.current.fetchTemplateByPath(templateName, function() { 
-            _this.renderTemplate.call(_this, this.responseText);
-        });
-    };
-
-    BaseViewComponent.prototype.getElementByClassName = function (name) {
-        try {
-            var elements = document.getElementsByClassName(name);
-            if (elements.length > 0) {
-                return elements[0];
-            } else {
-                throw "DOM element with class name '" + name + "' does not exist.";
-            }
-        } catch (e) {
-            console.error(e);
+var DOMFunctions = (function () {
+    this.getElementByClassName = function (name) {
+        var elements = document.getElementsByClassName(name);
+        if (elements.length > 0) {
+            return elements[0];
+        } else {
+            return null;
         }
     }
 
-    return BaseViewComponent;
-
-})(BaseViewComponent || {});;//= require app/components/BaseViewComponent.js
-
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-
-var StreamListItem = (function (_super) {
-    __extends(StreamListItem, _super);
-    function StreamListItem(streamItem, viewHolderSelector) {
-            _super.call(this);
-            this.streamItem = streamItem;
-            this.viewHolder = document.getElementsByClassName(viewHolderSelector)[0];
+    this.bindEventByClassName = function (eventName, className, handlerFunction) {
+        var element = DOMFunctions.getElementByClassName(className);
+        if (element !== null) {
+            element.addEventListener(eventName, handlerFunction);
+        }
     }
 
-    StreamListItem.prototype.activate = function() {
-            this.fetchTemplate("app/templates/StreamListItem.html");
+    this.getTemplateWithData = function (data, template){
+        for (var prop in data) {
+            template = template.replace("{{" + prop + "}}", data[prop])
+        }
+        return template;
     }
 
-    StreamListItem.prototype.renderTemplate = function(searchListItemHtml){
-            var _this = this;
-            for (var prop in _this.streamItem) {
-                searchListItemHtml = searchListItemHtml.replace("{{" + prop + "}}", _this.streamItem[prop])
-            }
-            _this.viewHolder.insertAdjacentHTML("beforeend", searchListItemHtml);
-    }
+    return this;
 
-    return StreamListItem;
+})(DOMFunctions || {});
 
-}(BaseViewComponent || {}));;//= require app/components/BaseViewComponent.js
-//= require app/components/StreamListItem.js
-//= require app/services/SearchStreamService.js
-//= require app/models/QueryInfo.js
+var StreamsList = (function () {
 
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-
-var StreamsList = (function (_super) {
-    __extends(StreamsList, _super);
     function StreamsList(viewHolderSelector) {
-        _super.call(this);
         var _this = this;
         _this.streamItems = [];
         _this.queryInfo = new QueryInfo();
@@ -224,77 +150,99 @@ var StreamsList = (function (_super) {
         _this.getStreamsList = function(streams, totalCount) {
             _this.streamItems = streams;
             _this.queryInfo.TotalCount = totalCount;
-            _this.fetchTemplate("app/templates/StreamsList.html");
+            _this.renderTemplate(`<div class="totalStreams">Total results: {{TotalCount}}</div>
+                                    <div class="paging-control">
+                                        <span class="prev-page"></span>
+                                        <span>{{CurrentPage}}</span>
+                                        <span> / </span>
+                                        <span>{{TotalPages}}</span>
+                                        <span class="next-page"></span>
+                                    </div>
+                                    <div class="stream-list">
+                                        <ul class="streams"></ul>
+                                    </div>`);
         }
-
         return _this;
     }
 
-    StreamsList.prototype.executeSearch = function(increasePage) {
-        this.queryInfo.CurrentPage += increasePage;
+    StreamsList.prototype.executeSearch = function (pageDirection) {
+        this.queryInfo.CurrentPage += pageDirection;
         this.streamService.getStreamCollection(this.queryInfo.SearchString, this.getStreamsList, this.queryInfo.CurrentPage);
     }
 
-    StreamsList.prototype.activate = function(searchString) {
+    StreamsList.prototype.activate = function (searchString) {
         this.queryInfo.SearchString = searchString;
         this.executeSearch(0);
     }
 
-     StreamsList.prototype.renderTemplate = function(streamsListHtml){
-            var _this = this;
-            for (var prop in _this.queryInfo) {
-                streamsListHtml = streamsListHtml.replace("{{" + prop + "}}", _this.queryInfo[prop])
-            }
-            _this.viewHolder.innerHTML = streamsListHtml;
+    StreamsList.prototype.renderTemplate = function (streamsListHtml){
+            streamsListHtml = DOMFunctions.getTemplateWithData(this.queryInfo, streamsListHtml);
+            this.viewHolder.innerHTML = streamsListHtml;
 
-            if (_this.queryInfo.TotalCount > 0) {
-                var nextPageButton = this.getElementByClassName("next-page");
-                if(_this.queryInfo.TotalPages > _this.queryInfo.CurrentPage) {
-                    nextPageButton.addEventListener("click", _this.executeSearch.bind(_this, 1));
+            if (this.queryInfo.TotalCount > 0) {
+                var nextPageButton = DOMFunctions.getElementByClassName("next-page");
+                if(this.queryInfo.TotalPages > this.queryInfo.CurrentPage) {
+                    nextPageButton.addEventListener("click", this.executeSearch.bind(this, 1));
                 }
                 else {
                     nextPageButton.className += " invisible";
                 }
 
-                var prevPageButton = this.getElementByClassName("prev-page");
-                if(_this.queryInfo.CurrentPage > 1) {
-                    prevPageButton.addEventListener("click", _this.executeSearch.bind(_this, -1));
+                var prevPageButton = DOMFunctions.getElementByClassName("prev-page");
+                if(this.queryInfo.CurrentPage > 1) {
+                    prevPageButton.addEventListener("click", this.executeSearch.bind(this, -1));
                 }
                 else {
                     prevPageButton.className += " invisible";
                 }
             }
             else {
-                var pagingControl =  this.getElementByClassName("paging-control");  
+                var pagingControl =  DOMFunctions.getElementByClassName("paging-control");  
                 pagingControl.className += " invisible";
             }
+            var streamItemsHolder = DOMFunctions.getElementByClassName("streams");
 
-            for (i = 0; i < _this.streamItems.length; i++) { 
-                var streamListItem = new StreamListItem(_this.streamItems[i], "streams");
-                streamListItem.activate();
+            for (i = 0; i < this.streamItems.length; i++) { 
+                streamItemsHolder.insertAdjacentHTML("beforeend", this.createListItemContent(this.streamItems[i], "streams"));
             }
     }
 
+    StreamsList.prototype.createListItemContent = function (streamItem) {
+        return DOMFunctions.getTemplateWithData(streamItem, `<li>
+                                    <div class="stream-preview">
+                                        <span></span><img src="{{PreviewImageUrl}}" />
+                                    </div>
+                                    <div class="stream-details">
+                                        <h3>
+                                            <a href="{{StreamUrl}}" class="stream-name">{{DisplayName}}</a>
+                                        </h3>
+                                        <div class="game-name">
+                                            <span>{{GameName}}</span> - <span>{{Viewers}}</span> viewers
+                                        </div>
+                                        <div>{{Description}}</div>
+                                    </div>
+                                </li>`);
+        }
+
     return StreamsList;
 
-})(BaseViewComponent || {});;//= require app/components/BaseViewComponent.js
-//= require app/components/StreamsList.js
+})(StreamsList || {});
 
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-
-var SearchListController = (function (_super) {
-    __extends(SearchListController, _super);
+var SearchListController = (function () {
     function SearchListController() {
-        _super.call(this);
         this.searchString = "";
     }
 
     SearchListController.prototype.init = function() {
-        this.fetchTemplate("app/templates/SearchListView.html");
+        this.renderTemplate(`<div class="search-list-view">
+                                    <div class="header-controls">
+                                        <div class="search-control">
+                                            <input type="text" class="searchString" placeholder="Search query..." />
+                                            <button type="button" class="executeSearch">Search</button>
+                                        </div>
+                                    </div>
+                                    <div class="search-list"></div>
+                                </div>`);
     }
 
     SearchListController.prototype.refreshSearchList = function (ev) {
@@ -322,22 +270,19 @@ var SearchListController = (function (_super) {
     };
 
     SearchListController.prototype.renderTemplate = function(searchListViewHtml){
-        var _this = this;
         var output = document.getElementById("applicationHost");
-        output.innerHTML = output.innerHTML + searchListViewHtml;
-        _this.getElementByClassName("executeSearch").addEventListener("click", _this.refreshSearchList.bind(_this));
-        _this.getElementByClassName("searchString").addEventListener("keyup", _this.setSearchString.bind(_this));
+        output.insertAdjacentHTML("beforeend", searchListViewHtml);
+        DOMFunctions.bindEventByClassName("click", "executeSearch", this.refreshSearchList.bind(this));
+        DOMFunctions.bindEventByClassName("keyup", "searchString", this.setSearchString.bind(this));
     }
 
     return SearchListController;
 
-})(BaseViewComponent || {});;//= require app/controllers/SearchListController.js
-//= require app/helpers/templateFetcher.js
+})(SearchListController || {});
 
 var App = (function (app) {
 
   app.init = function () {
-     TemplateFetcher.init();
      SearchListController.init();
   };
   
