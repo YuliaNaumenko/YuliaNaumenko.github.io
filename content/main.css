@@ -42,7 +42,7 @@ a:visited {
 }
 
 .search-control {
-    padding: 50px 0 0 20px;
+    padding: 55px 0 0 20px;
 }
 
 .search-control input::-webkit-input-placeholder { 
@@ -52,7 +52,7 @@ a:visited {
 
 
 .search-list {
-    padding: 10px 20px;
+    padding: 20px 20px;
     font-size: small;
 }
 
@@ -148,7 +148,7 @@ a:visited {
 }
 
 .game-description {
-    word-break: break-all;
+    word-break: break-word;
     font-size: small;
     color: #545454;
     line-height: 1.4;

@@ -110,7 +110,10 @@ var SearchStreamService = (function () {
 }(SearchStreamService || {}));
 
 var DOMFunctions = (function () {
-    this.getElementByClassName = function (name) {
+    function DOMFunctions() {
+    }
+
+    DOMFunctions.prototype.getElementByClassName = function (name) {
         var elements = document.getElementsByClassName(name);
         if (elements.length > 0) {
             return elements[0];
@@ -119,27 +122,28 @@ var DOMFunctions = (function () {
         }
     }
 
-    this.bindEventByClassName = function (eventName, className, handlerFunction) {
-        var element = DOMFunctions.getElementByClassName(className);
+    DOMFunctions.prototype.bindEventByClassName = function (eventName, className, handlerFunction) {
+        var element = this.getElementByClassName(className);
         if (element !== null) {
             element.addEventListener(eventName, handlerFunction);
         }
     }
 
-    this.getTemplateWithData = function (data, template){
+    DOMFunctions.prototype.getTemplateWithData = function (data, template){
         for (var prop in data) {
             template = template.replace("{{" + prop + "}}", data[prop])
         }
         return template;
     }
 
-    return this;
+    return DOMFunctions;
 
 })(DOMFunctions || {});
 
 var Spinner = (function () {
         function Spinner() {
-            this.spinnerElement = DOMFunctions.getElementByClassName("spinner");
+            var domFunctions = new DOMFunctions();
+            this.spinnerElement = domFunctions.getElementByClassName("spinner");
         }
 
         Spinner.prototype.show = function () {
@@ -193,11 +197,12 @@ var StreamsList = (function () {
     }
 
     StreamsList.prototype.renderTemplate = function (streamsListHtml){
-            streamsListHtml = DOMFunctions.getTemplateWithData(this.queryInfo, streamsListHtml);
+            var domFunctions = new DOMFunctions();
+            streamsListHtml = domFunctions.getTemplateWithData(this.queryInfo, streamsListHtml);
             this.viewHolder.innerHTML = streamsListHtml;
 
             if (this.queryInfo.TotalCount > 0) {
-                var nextPageButton = DOMFunctions.getElementByClassName("next-page");
+                var nextPageButton = domFunctions.getElementByClassName("next-page");
                 if(this.queryInfo.TotalPages > this.queryInfo.CurrentPage) {
                     nextPageButton.addEventListener("click", this.executeSearch.bind(this, 1));
                 }
@@ -205,7 +210,7 @@ var StreamsList = (function () {
                     nextPageButton.className += " invisible";
                 }
 
-                var prevPageButton = DOMFunctions.getElementByClassName("prev-page");
+                var prevPageButton = domFunctions.getElementByClassName("prev-page");
                 if(this.queryInfo.CurrentPage > 1) {
                     prevPageButton.addEventListener("click", this.executeSearch.bind(this, -1));
                 }
@@ -214,18 +219,13 @@ var StreamsList = (function () {
                 }
             }
             else {
-                var pagingControl =  DOMFunctions.getElementByClassName("paging-control");  
+                var pagingControl =  domFunctions.getElementByClassName("paging-control");  
                 pagingControl.className += " invisible";
             }
-            var streamItemsHolder = DOMFunctions.getElementByClassName("streams");
+            var streamItemsHolder = domFunctions.getElementByClassName("streams");
 
             for (i = 0; i < this.streamItems.length; i++) { 
-                streamItemsHolder.insertAdjacentHTML("beforeend", this.createListItemContent(this.streamItems[i], "streams"));
-            }
-    }
-
-    StreamsList.prototype.createListItemContent = function (streamItem) {
-        return DOMFunctions.getTemplateWithData(streamItem, `<li>
+                streamItemsHolder.insertAdjacentHTML("beforeend", domFunctions.getTemplateWithData(this.streamItems[i], `<li>
                                     <div class="stream-preview">
                                         <span></span><img src="{{PreviewImageUrl}}" />
                                     </div>
@@ -238,8 +238,9 @@ var StreamsList = (function () {
                                         </div>
                                         <div class="game-description">{{Description}}</div>
                                     </div>
-                                </li>`);
-        }
+                                </li>`));
+            }
+    }
 
     return StreamsList;
 
@@ -289,8 +290,9 @@ var SearchListController = (function () {
     SearchListController.prototype.renderTemplate = function(searchListViewHtml){
         var output = document.getElementById("applicationHost");
         output.insertAdjacentHTML("beforeend", searchListViewHtml);
-        DOMFunctions.bindEventByClassName("click", "executeSearch", this.refreshSearchList.bind(this));
-        DOMFunctions.bindEventByClassName("keyup", "searchString", this.setSearchString.bind(this));
+        var domFunctions = new DOMFunctions();
+        domFunctions.bindEventByClassName("click", "executeSearch", this.refreshSearchList.bind(this));
+        domFunctions.bindEventByClassName("keyup", "searchString", this.setSearchString.bind(this));
     }
 
     return SearchListController;
