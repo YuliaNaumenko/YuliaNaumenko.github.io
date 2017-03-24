@@ -1,5 +1,4 @@
 body {
-    position: fixed;
     right: 0;
     left: 0;
     top: 0;
@@ -18,6 +17,10 @@ a:visited {
     color: #609;
 }
 
+.shell {
+    overflow-y: scroll;
+}
+
 .invisible {
     visibility: hidden;
 }
@@ -26,10 +29,11 @@ a:visited {
     border: 1px grey solid;
     background-color: white;
     position: absolute;
-    top: 5%;
+    top: 20px;
     left: 15%;
     right: 15%;
-    bottom: 5%;
+    margin-bottom: 20px;
+    min-height: 100%;
 }
 
 .header-controls {
@@ -66,19 +70,13 @@ a:visited {
 
 .streams {
     list-style: none;
-    padding: 5px 10px;
-    overflow-y: scroll;
-    position: absolute;
-    bottom: 10px;
-    top: 120px;
-    left: 10px;
-    right: 10px;
+    padding: 5px 0;
     height: inherit;
 }
 
 .streams li {
     clear: both;
-    height: 180px;
+    height: 135px;
     margin: 10px 0;
     line-height: 1.2;
     text-align: left;
@@ -90,11 +88,12 @@ a:visited {
 
 .stream-preview {
     float: left;
-    height: 180px;
-    width: 320px;
+    height: 135px;
+    width: 240px;
     border: 1px grey solid;
     white-space: nowrap;
     text-align: center;
+    margin-right: 15px;
 }
 
 .stream-preview img {
@@ -110,7 +109,7 @@ a:visited {
 }
 
 .stream-details {
-    float: left;
+    word-break: break-word;
     margin-left: 20px;
 }
 
@@ -148,10 +147,28 @@ a:visited {
     line-height: 16px;
 }
 
+.game-description {
+    word-break: break-all;
+    font-size: small;
+    color: #545454;
+    line-height: 1.4;
+}
+
 .prev-page {
     background-image: url(arrow-left.png);    
 }
 
 .next-page {
     background-image: url(arrow-right.png);    
+}
+
+.spinner {
+    height: 30px;
+    width: 30px;
+    background-image: url(spinner.gif);
+    position: absolute;
+    top: 50%;
+    background-size: 30px 30px;
+    margin: auto 50%;
+    z-index: 100;
 }
