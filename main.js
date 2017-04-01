@@ -45,6 +45,7 @@ function JSONPHandler(url, onSuccess, onError) {
 
         CallbackRegistry[callbackName] = function(data) {
             scriptOk = true;
+            document.body.removeChild(document.getElementById(callbackName));
             delete CallbackRegistry[callbackName];
             onSuccess(data);
         };
@@ -56,10 +57,11 @@ function JSONPHandler(url, onSuccess, onError) {
         }
 
         var script = document.createElement('script');
+        script.id = callbackName;
 
         script.onreadystatechange = function() {
             if (this.readyState == 'complete' || this.readyState == 'loaded') {
-            this.onreadystatechange = null;
+                this.onreadystatechange = null;
                 setTimeout(checkCallback, 0);
             }
         }
