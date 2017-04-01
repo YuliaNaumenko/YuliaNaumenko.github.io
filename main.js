@@ -1,44 +1,43 @@
-var Stream = (function () {
-        function Stream(data) {
-            if (data === void 0) { data = {}; }
+class Stream {
+    constructor(data) {
+        if (data === void 0) { data = {}; }
 
-            this.Id = data._id;
-            this.PreviewImageUrl = data.preview.medium;
-            this.DisplayName = data.channel.display_name;
-            this.GameName = data.game;
-            this.Viewers = data.viewers;
-            this.Description = data.channel.status;
-            this.StreamUrl = data.channel.url;
+        this.Id = data._id;
+        this.PreviewImageUrl = data.preview ? data.preview.medium : "";
+        this.GameName = data.game;
+        this.Viewers = data.viewers;
+        if (data.channel) {
+            this.defineChannelProperties(data.channel);
         }
-        return Stream;
-}());
+    }
 
-var QueryInfo = (function () {
-        function QueryInfo(searchString, totalCount, currentPage) {
+    defineChannelProperties(dataChannel) {
+        this.DisplayName = dataChannel.display_name;
+        this.Description = dataChannel.status;
+        this.StreamUrl = dataChannel.url;
+    }
+}
 
-            this.SearchString = searchString || "";
-            this.TotalCount = totalCount || 0;
-            this.CurrentPage = currentPage || 1;
-        }
+class QueryInfo {
+    constructor(searchString, totalCount, currentPage) {
+        this.SearchString = searchString || "";
+        this.TotalCount = totalCount || 0;
+        this.CurrentPage = currentPage || 1;
 
-        Object.defineProperty(QueryInfo.prototype, "TotalPages", {
-            get: function () {
-                if (this.TotalCount > 0) {
-                    return Math.ceil(this.TotalCount / 5)
-                }
-                return 0;
-            },
+        Object.defineProperty(this, 'TotalPages', {
             enumerable: true,
-            configurable: true
+            get: () => { return this.TotalCount > 0 ? Math.ceil(this.TotalCount / 5) : 0; }
         });
-        return QueryInfo;
-}());
+    }
+}
 
-var CallbackRegistry = {}; 
+ 
+const CallbackRegistry = {};
 
-function JSONPHandler(url, onSuccess, onError) {
-        var scriptOk = false;
-        var callbackName = 'cb' + String(Math.random()).slice(-6);
+class JSONPHandler {
+    constructor(url, onSuccess, onError){
+        let scriptOk = false;
+        const callbackName = 'cb' + String(Math.random()).slice(-6);
         url += ~url.indexOf('?') ? '&' : '?';
         // client id should be read from configuration
         url += 'client_id=luqvyoa6utwz5evwsxo0tkjd3bdjk3&callback=CallbackRegistry.' + callbackName;
@@ -56,7 +55,7 @@ function JSONPHandler(url, onSuccess, onError) {
             onError(url);
         }
 
-        var script = document.createElement('script');
+        const script = document.createElement('script');
         script.id = callbackName;
 
         script.onreadystatechange = function() {
@@ -70,53 +69,46 @@ function JSONPHandler(url, onSuccess, onError) {
         script.src = url;
 
         document.body.appendChild(script);
-};
+    }
+}
 
-var SearchStreamService = (function () {
-
-    function SearchStreamService() {
-        var _this = this;
-        _this.parseResult = function(result) {
-            var totalCount = result._total;
-            var streams = result.streams || [];
-            var parsedStreams = [];
-            for (i = 0; i < streams.length; i++) { 
+class SearchStreamService {
+    constructor() {
+        const _this = this;
+        this.parseResult = function (result) {
+            const totalCount = result._total;
+            const streams = result.streams || [];
+            const parsedStreams = [];
+            for (let i = 0; i < streams.length; i++) { 
                 parsedStreams.push(new Stream(streams[i]));
             }
             _this.fnCallback(parsedStreams, totalCount);
-        };
-
-        return _this;
+        }
     }
 
-    SearchStreamService.prototype.getStreamCollection = function (searchString, fnCallback, pageNumber, limit) {
-        var url = "https://api.twitch.tv/kraken/search/streams?query=";
+    getStreamCollection(searchString, fnCallback, pageNumber, limit) {
+        let url = "https://api.twitch.tv/kraken/search/streams?query=";
         url += encodeURIComponent(searchString);
         if (typeof (limit) !== "number" || limit <= 0) {
             limit = 5;
         }
         if (typeof (pageNumber) === "number" && pageNumber > 1) {
-            var offset = (pageNumber - 1) * limit;
+            const offset = (pageNumber - 1) * limit;
             url += '&offset=' + offset;
         }
         url += '&limit=' + limit;
         this.fnCallback = fnCallback;
-        JSONPHandler(url, this.parseResult, this.errorHandler);
+        new JSONPHandler(url, this.parseResult, this.errorHandler);
     }
 
-    SearchStreamService.prototype.errorHandler = function(result) {
+    errorHandler(result) {
         console.error(result);
     };
+}
 
-	return SearchStreamService;
-}(SearchStreamService || {}));
-
-var DOMFunctions = (function () {
-    function DOMFunctions() {
-    }
-
-    DOMFunctions.prototype.getElementByClassName = function (name) {
-        var elements = document.getElementsByClassName(name);
+class DOMFunctions {
+    getElementByClassName(name) {
+        const elements = document.getElementsByClassName(name);
         if (elements.length > 0) {
             return elements[0];
         } else {
@@ -124,49 +116,45 @@ var DOMFunctions = (function () {
         }
     }
 
-    DOMFunctions.prototype.bindEventByClassName = function (eventName, className, handlerFunction) {
-        var element = this.getElementByClassName(className);
+    bindEventByClassName(eventName, className, handlerFunction) {
+        const element = this.getElementByClassName(className);
         if (element !== null) {
             element.addEventListener(eventName, handlerFunction);
         }
     }
 
-    DOMFunctions.prototype.getTemplateWithData = function (data, template){
-        for (var prop in data) {
+    getTemplateWithData (data, template){
+        for (let prop in data) {
             template = template.replace("{{" + prop + "}}", data[prop])
         }
         return template;
     }
+}
 
-    return DOMFunctions;
+class Spinner {
+    constructor() {
+        const domFunctions = new DOMFunctions();
+        this.spinnerElement = domFunctions.getElementByClassName("spinner");
+    }
 
-})(DOMFunctions || {});
+    show() {
+        this.spinnerElement.className = this.spinnerElement.className.replace(" invisible", "");
+    }
 
-var Spinner = (function () {
-        function Spinner() {
-            var domFunctions = new DOMFunctions();
-            this.spinnerElement = domFunctions.getElementByClassName("spinner");
-        }
+    hide() {
+        this.spinnerElement.className += " invisible";
+    }
+}
 
-        Spinner.prototype.show = function () {
-            this.spinnerElement.className = this.spinnerElement.className.replace(" invisible", "");
-        }
-
-        Spinner.prototype.hide = function () {
-            this.spinnerElement.className += " invisible";
-        }
-        return Spinner;
-}());
-
-var StreamsList = (function () {
-
-    function StreamsList(viewHolderSelector) {
-        var _this = this;
+class StreamsList {
+    constructor(viewHolderSelector) {
+        const _this = this;
         _this.streamItems = [];
         _this.queryInfo = new QueryInfo();
         _this.spinner = new Spinner();
         _this.streamService = new SearchStreamService();
         _this.viewHolder = document.getElementsByClassName(viewHolderSelector)[0];
+        _this.domFunctions = new DOMFunctions();
 
         _this.getStreamsList = function(streams, totalCount) {
             _this.streamItems = streams;
@@ -184,27 +172,25 @@ var StreamsList = (function () {
                                     </div>`);
             _this.spinner.hide();
         }
-        return _this;
     }
 
-    StreamsList.prototype.executeSearch = function (pageDirection) {
+    executeSearch(pageDirection) {
         this.queryInfo.CurrentPage += pageDirection;
         this.spinner.show();
         this.streamService.getStreamCollection(this.queryInfo.SearchString, this.getStreamsList, this.queryInfo.CurrentPage);
     }
 
-    StreamsList.prototype.activate = function (searchString) {
+    activate(searchString) {
         this.queryInfo.SearchString = searchString;
         this.executeSearch(0);
     }
 
-    StreamsList.prototype.renderTemplate = function (streamsListHtml){
-            var domFunctions = new DOMFunctions();
-            streamsListHtml = domFunctions.getTemplateWithData(this.queryInfo, streamsListHtml);
+    renderTemplate(streamsListHtml){
+            streamsListHtml = this.domFunctions.getTemplateWithData(this.queryInfo, streamsListHtml);
             this.viewHolder.innerHTML = streamsListHtml;
 
             if (this.queryInfo.TotalCount > 0) {
-                var nextPageButton = domFunctions.getElementByClassName("next-page");
+                const nextPageButton = this.domFunctions.getElementByClassName("next-page");
                 if(this.queryInfo.TotalPages > this.queryInfo.CurrentPage) {
                     nextPageButton.addEventListener("click", this.executeSearch.bind(this, 1));
                 }
@@ -212,7 +198,7 @@ var StreamsList = (function () {
                     nextPageButton.className += " invisible";
                 }
 
-                var prevPageButton = domFunctions.getElementByClassName("prev-page");
+                const prevPageButton = this.domFunctions.getElementByClassName("prev-page");
                 if(this.queryInfo.CurrentPage > 1) {
                     prevPageButton.addEventListener("click", this.executeSearch.bind(this, -1));
                 }
@@ -221,13 +207,13 @@ var StreamsList = (function () {
                 }
             }
             else {
-                var pagingControl =  domFunctions.getElementByClassName("paging-control");  
+                const pagingControl =  this.domFunctions.getElementByClassName("paging-control");  
                 pagingControl.className += " invisible";
             }
-            var streamItemsHolder = domFunctions.getElementByClassName("streams");
+            const streamItemsHolder = this.domFunctions.getElementByClassName("streams");
 
-            for (i = 0; i < this.streamItems.length; i++) { 
-                streamItemsHolder.insertAdjacentHTML("beforeend", domFunctions.getTemplateWithData(this.streamItems[i], `<li>
+            for (let i = 0; i < this.streamItems.length; i++) { 
+                streamItemsHolder.insertAdjacentHTML("beforeend", this.domFunctions.getTemplateWithData(this.streamItems[i], `<li>
                                     <div class="stream-preview">
                                         <span></span><img src="{{PreviewImageUrl}}" />
                                     </div>
@@ -243,17 +229,15 @@ var StreamsList = (function () {
                                 </li>`));
             }
     }
+}
 
-    return StreamsList;
-
-})(StreamsList || {});
-
-var SearchListController = (function () {
-    function SearchListController() {
+class SearchListController {
+    constructor() {
         this.searchString = "";
+        this.domFunctions = new DOMFunctions();
     }
 
-    SearchListController.prototype.init = function() {
+    init() {
         this.renderTemplate(`<div class="search-list-view">
                                     <div class="header-controls">
                                         <div class="search-control">
@@ -265,50 +249,43 @@ var SearchListController = (function () {
                                 </div>`);
     }
 
-    SearchListController.prototype.refreshSearchList = function (ev) {
+    refreshSearchList() {
         if (!this.searchString || this.searchString === "") {
             alert("Search query is required. Please enter the value.");
         }else {
-            var streamsList = new StreamsList("search-list");           
+            const streamsList = new StreamsList("search-list");           
             streamsList.activate(this.searchString);
         }
-    };
+    }
 
-    SearchListController.init = function () {
-        var searchListController = new this();
-        return searchListController.init();
-    };
-
-    SearchListController.prototype.setSearchString = function (ev) {
-        ev.preventDefault();
-        if (ev.keyCode == 13) {
+    setSearchString(event) {
+        event.preventDefault();
+        if (event.keyCode == 13) {
             this.refreshSearchList();
         }
         else {
-            this.searchString = ev.target.value;
+            this.searchString = event.target.value;
         }
-    };
-
-    SearchListController.prototype.renderTemplate = function(searchListViewHtml){
-        var output = document.getElementById("applicationHost");
-        output.insertAdjacentHTML("beforeend", searchListViewHtml);
-        var domFunctions = new DOMFunctions();
-        domFunctions.bindEventByClassName("click", "executeSearch", this.refreshSearchList.bind(this));
-        domFunctions.bindEventByClassName("keyup", "searchString", this.setSearchString.bind(this));
     }
 
-    return SearchListController;
+    renderTemplate(searchListViewHtml) {
+        const output = document.getElementById("applicationHost");
+        output.insertAdjacentHTML("beforeend", searchListViewHtml);
 
-})(SearchListController || {});
+        this.domFunctions.bindEventByClassName("click", "executeSearch", this.refreshSearchList.bind(this));
+        this.domFunctions.bindEventByClassName("keyup", "searchString", this.setSearchString.bind(this));
+    }
 
-var App = (function (app) {
+    static init() {
+        const searchListController = new SearchListController();
+        return searchListController.init();
+    }
+}
 
-  app.init = function () {
-     SearchListController.init();
-  };
-  
-  return app;
-
-})(App || {});
+class App {
+    static init() {
+        SearchListController.init();
+    };
+}
 
 App.init();
